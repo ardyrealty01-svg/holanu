@@ -7,6 +7,7 @@ import {
   Ban, ChevronUp, ShieldCheck, MoreVertical,
   Phone, MapPin, Home, Wallet, Clock,
   MessageCircle, CheckCircle2, AlertCircle, Loader2,
+  User,
 } from 'lucide-react';
 
 /* ─── DATA TYPES ─── */
