@@ -1,0 +1,122 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* ── Blue & White Palette ── */
+  --primary: #1D4ED8;
+  --primary-hover: #1E40AF;
+  --primary-light: #DBEAFE;
+  --primary-dark: #1E3A8A;
+
+  --secondary: #1E3A8A;
+  --secondary-hover: #1E40AF;
+  --secondary-light: #1E40AF;
+
+  --surface: #FFFFFF;
+  --surface-warm: #F8FAFF;
+  --surface-muted: #EFF6FF;
+  --surface-dark: #1E3A8A;
+
+  --background: #EFF6FF;
+
+  --border: #BFDBFE;
+  --border-strong: #1D4ED8;
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --text-on-dark: #EFF6FF;
+  --text-on-dark-muted: #CBD5E1;
+  --text-accent: #1D4ED8;
+
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+
+  --whatsapp: #25D366;
+
+  --badge-premium: #1E3A8A;
+  --badge-premium-text: #BAE6FD;
+  --badge-featured: #1D4ED8;
+  --badge-featured-text: #FFFFFF;
+  --badge-hot: #DC2626;
+  --badge-hot-text: #FFFFFF;
+  --badge-sold: #475569;
+  --badge-sold-text: #FFFFFF;
+
+  /* Legacy oklch vars for compatibility */
+  --background-oklch: oklch(1 0 0);
+  --foreground-oklch: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.145 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border-oklch: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    background-color: #EFF6FF;
+    color: #0F172A;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ── Font utilities ── */
+.font-display  { font-family: var(--font-display, 'Cormorant Garamond', serif); }
+.font-heading  { font-family: var(--font-heading, 'Plus Jakarta Sans', sans-serif); }
+.font-sans     { font-family: var(--font-sans, 'DM Sans', sans-serif); }
+.font-mono     { font-family: var(--font-mono, 'JetBrains Mono', monospace); }
+
+/* ── Badge animations ── */
+@keyframes bluePulse {
+  0%,100% { box-shadow: 0 0 6px 1px rgba(29,78,216,.55), 0 0 12px 2px rgba(29,78,216,.20); opacity:1; }
+  50%      { box-shadow: 0 0 10px 3px rgba(29,78,216,.85), 0 0 22px 6px rgba(29,78,216,.35); opacity:.88; }
+}
+@keyframes shimmerSky {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+@keyframes fireDance {
+  0%,100% { transform: scaleY(1) rotate(-2deg); }
+  33%      { transform: scaleY(1.08) rotate(2deg); }
+  66%      { transform: scaleY(.95) rotate(-1deg); }
+}
+
+.badge-premium {
+  background: linear-gradient(135deg,#1E3A8A,#1D4ED8);
+  animation: bluePulse 2s ease-in-out infinite;
+}
+.badge-featured {
+  background: linear-gradient(90deg,#38BDF8,#3B82F6,#1D4ED8,#38BDF8);
+  background-size: 300% auto;
+  animation: shimmerSky 3s linear infinite;
+}
+.fire-icon {
+  display: inline-block;
+  animation: fireDance 0.85s ease-in-out infinite;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #EFF6FF; }
+::-webkit-scrollbar-thumb { background: #BFDBFE; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #1D4ED8; }
+
+/* ── Selection ── */
+::selection { background: #DBEAFE; color: #1E3A8A; }

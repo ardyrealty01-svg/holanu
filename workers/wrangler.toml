@@ -1,0 +1,38 @@
+name = "holanu-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ── D1 Database ──
+[[d1_databases]]
+binding = "DB"
+database_name = "holanu-db"
+database_id = "346c6108-057e-42fa-817d-636923fc20c3"
+
+# ── Environment Variables (non-secret) ──
+[vars]
+ENVIRONMENT = "production"
+# Setelah deploy Vercel, ganti dengan domain Vercel kamu jika belum custom domain
+# Format multi-domain: pisahkan dengan koma
+# Contoh: "https://holanu.id,https://holanu.vercel.app"
+CORS_ORIGIN  = "https://holanu.id,https://holanu.vercel.app,http://localhost:3000"
+IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/wybuzvlst"
+IMAGEKIT_PUBLIC_KEY   = "public_pXv1xoPwU5jQ18NOLzNE2NOUEdg="
+
+# ── SECRETS — Jalankan perintah ini sekali sebelum deploy: ──
+# wrangler secret put IMAGEKIT_PRIVATE_KEY
+#   → masukkan: private_6HQhYxDQ8lEJ2vGLxTbDwwNOnR0=
+#
+# wrangler secret put CLERK_SECRET_KEY
+#   → masukkan: sk_test_tTbxvkBaZq1CYZZNBLhg6Su1GBUJjpJfgwYz8FoUhM
+
+# ── Development settings ──
+[dev]
+port = 8787
+local_protocol = "http"
+
+[env.development.vars]
+ENVIRONMENT = "development"
+CORS_ORIGIN  = "*"
+IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/wybuzvlst"
+IMAGEKIT_PUBLIC_KEY   = "public_pXv1xoPwU5jQ18NOLzNE2NOUEdg="
