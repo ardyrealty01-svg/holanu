@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, Plus, Trash2, Tag, Percent, Toggle } from 'lucide-react';
+import { Save, Plus, Trash2, Tag, Percent } from 'lucide-react';
 
 const initialPackages = [
   { id: 'starter',  name: 'Starter',  price: 0,      yearly: 0,         listing: 3,   foto: 5,   featured: 0, kontrak: 0,  active: true,  highlight: false },
