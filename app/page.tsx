@@ -1,3 +1,5 @@
+'use client';
+
 import { Navbar } from '@/components/navbar';
 import { HeroSection } from '@/components/hero-section';
 import { CategorySection } from '@/components/category-section';
@@ -6,7 +8,7 @@ import { LatestSection } from '@/components/latest-section';
 import { HowItWorks } from '@/components/how-it-works';
 import { AreaExplorer } from '@/components/area-explorer';
 import { KPRSection } from '@/components/kpr-section';
-import { TrustSection } from '@/components/trust-section';
+import { TrustSection } from '@/components/trust-section'; 
 import { ArticlesSection } from '@/components/articles-section';
 import { CTABanner } from '@/components/cta-banner';
 import { Footer } from '@/components/footer';
