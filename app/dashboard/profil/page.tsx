@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/nextjs';
 import { Camera, Instagram, Globe, Phone, Mail, ShieldCheck, Eye, MousePointerClick, Loader2, Check } from 'lucide-react';
 
 export default function ProfilPage() {
-  const { user }     = useUser();
-  const { getToken } = useAuth();
+  const { user, isLoaded } = useUser();
+  const { getToken }       = useAuth();
 
   const [tab, setTab]       = useState<'profil' | 'keamanan' | 'notifikasi' | 'preferensi'>('profil');
   const [saving, setSaving] = useState(false);
@@ -15,13 +15,50 @@ export default function ProfilPage() {
   const displayName  = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username || 'Pengguna' : '';
   const displayEmail = user?.primaryEmailAddress?.emailAddress ?? '';
 
-  // Profil form state
-  const [nama,      setNama]      = useState(displayName);
-  const [whatsapp,  setWhatsapp]  = useState(user?.phoneNumbers?.[0]?.phoneNumber?.replace('+62', '0') ?? '');
-  const [bio,       setBio]       = useState('Spesialis properti area Sleman & Kota Yogyakarta.');
+  // Profil form state — diisi dari API saat load
+  const [nama,      setNama]      = useState('');
+  const [whatsapp,  setWhatsapp]  = useState('');
+  const [bio,       setBio]       = useState('');
   const [instagram, setInstagram] = useState('');
   const [website,   setWebsite]   = useState('');
   const [city,      setCity]      = useState('');
+  const [profLoaded, setProfLoaded] = useState(false);
+
+  // Load data profil dari D1 via Workers API saat user tersedia
+  useEffect(() => {
+    if (!isLoaded || !user?.id || profLoaded) return;
+    const load = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res  = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || ''}/api/users/${user.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const json = await res.json() as { ok: boolean; data: any };
+        if (json.ok && json.data) {
+          const d = json.data;
+          setNama(     d.name      || displayName);
+          setWhatsapp( d.whatsapp  || user?.phoneNumbers?.[0]?.phoneNumber?.replace('+62','0') || '');
+          setBio(      d.bio       || '');
+          setInstagram(d.instagram || '');
+          setWebsite(  d.website   || '');
+          setCity(     d.city      || '');
+        } else {
+          // Fallback ke data Clerk jika user belum di-sync ke D1
+          setNama(    displayName);
+          setWhatsapp(user?.phoneNumbers?.[0]?.phoneNumber?.replace('+62','0') || '');
+        }
+      } catch {
+        // Fallback silent
+        setNama(    displayName);
+        setWhatsapp(user?.phoneNumbers?.[0]?.phoneNumber?.replace('+62','0') || '');
+      } finally {
+        setProfLoaded(true);
+      }
+    };
+    load();
+  }, [isLoaded, user?.id]);
 
   const handleSaveProfil = async () => {
     setSaving(true);

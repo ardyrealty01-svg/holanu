@@ -390,8 +390,16 @@ export default function PropertyClient({ property, related }: Props) {
           <MessageCircle size={15} /> WhatsApp
         </button>
         <button onClick={() => !IS_LOGGED_IN ? openPopup('contact') : undefined}
-          className="flex items-center gap-2 border border-[#BFDBFE] text-slate-600 text-sm font-semibold px-3 py-2.5 rounded-xl hover:border-[#1D4ED8] transition-colors font-sans">
+          className="flex items-center gap-2 border border-[#BFDBFE] text-slate-600 text-sm font-semibold px-3 py-2.5 rounded-xl hover:border-[#1D4ED8] transition-colors font-sans"
+          title={IS_LOGGED_IN ? ((property as any).agent_wa ?? (property as any).agentWa ?? HOLANU_WA_NUMBER) : 'Login untuk lihat nomor'}
+        >
           <Phone size={15} />
+          {IS_LOGGED_IN && (
+            <span className="text-xs font-mono">
+              {((property as any).agent_wa ?? (property as any).agentWa ?? HOLANU_WA_NUMBER)
+                .replace(/(\d{4})(\d{4})(\d+)/, '$1-$2-$3')}
+            </span>
+          )}
         </button>
       </div>
       <div className="lg:hidden h-16" />

@@ -890,9 +890,10 @@ export default function TambahListingPage() {
                 try {
                   const token = await getToken();
                   if (!token) return;
+                  const draftPrice = parseInt(currentPrice.replace(/\D/g,'')) || 1; // min 1 agar tidak 0
                   const payload = {
                     title:         title || `${propType} Draft di ${city || province || 'Indonesia'}`,
-                    price:         parseInt(currentPrice.replace(/\D/g,'')) || 0,
+                    price:         draftPrice,
                     property_type: propType,
                     offer_type:    offerType.join(' & '),
                     province:      province || null,
@@ -900,6 +901,11 @@ export default function TambahListingPage() {
                     status:        'draft',
                     images:        [],
                     facilities:    facilities,
+                    // Sertakan data harga sewa & legalitas jika sudah diisi
+                    ...(offerType[0] !== 'Dijual' && rentPeriod ? { rent_period: rentPeriod } : {}),
+                    ...(sewaPrice ? { sewa_price: parseInt(sewaPrice.replace(/\D/g,'')) || 0 } : {}),
+                    ...(certificate ? { certificate } : {}),
+                    ...(imb ? { doc_status: imb === 'ada' ? 'on_hand' : 'no_doc' } : {}),
                   };
                   await createListing(payload, token);
                   alert('✅ Draft tersimpan! Bisa dilanjutkan kapan saja dari halaman Properti Saya.');

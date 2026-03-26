@@ -17,12 +17,6 @@ export interface Listing {
   province:       string | null;
   city:           string | null;
   district:       string | null;
-    min_bedrooms?:    number;
-    min_land_area?:   number;
-    min_build_area?:  number;
-    has_salary_slip?: boolean;
-    no_active_kpr?:   boolean;
-    need_kpr_help?:   boolean;
   address:        string | null;
   property_type:  string;
   offer_type:     string;
@@ -77,10 +71,15 @@ export interface Lead {
   property_type?:   string;
   purpose?:         string;
   lokasi_incaran?:  string;
+  lokasi_prov?:     string;
+  min_bedrooms?:    number;
+  min_land_area?:   number;
   budget_min?:      number;
   budget_max?:      number;
   payment_method?:  string;
   timeline?:        string;
+  certificate?:     string;
+  condition?:       string;
   facilities?:      string[];
   notes?:           string;
   source?:          'form' | 'popup' | 'listing_banner';
@@ -199,6 +198,24 @@ export async function submitLead(data: Lead): Promise<{ id: string }> {
 }
 
 // ── INQUIRIES ─────────────────────────────────────────
+export type InquiryStage = 'baru' | 'dihubungi' | 'survey' | 'negosiasi' | 'deal' | 'gagal';
+
+export interface Inquiry {
+  id:            string;
+  listing_id:    string;
+  from_user:     string | null;
+  name:          string;
+  whatsapp:      string;
+  message:       string | null;
+  via:           string;
+  stage:         InquiryStage;
+  notes:         string | null;
+  listing_title: string | null;
+  listing_code:  string | null;
+  created_at:    string;
+  updated_at:    string;
+}
+
 export async function submitInquiry(data: {
   listing_id: string; name: string; whatsapp: string; message?: string; via?: string;
 }): Promise<{ id: string }> {
@@ -207,19 +224,45 @@ export async function submitInquiry(data: {
 
 export async function getInquiries(
   token: string,
-  params?: { listing_id?: string; stage?: string; page?: number },
+  params?: { listing_id?: string; stage?: string; page?: number; limit?: number },
 ) {
   const qs = new URLSearchParams();
   if (params?.listing_id) qs.set('listing_id', params.listing_id);
   if (params?.stage)      qs.set('stage',      params.stage);
   if (params?.page)       qs.set('page',       String(params.page));
-  return apiFetch<{ inquiries: any[]; total: number }>(
+  if (params?.limit)      qs.set('limit',      String(params.limit));
+  return apiFetch<{ inquiries: Inquiry[]; total: number }>(
     `/api/inquiries${qs.toString() ? `?${qs}` : ''}`,
     { token }
   );
 }
 
+export async function updateInquiry(
+  id: string,
+  data: { stage?: InquiryStage; notes?: string | null },
+  token: string,
+): Promise<{ updated: boolean }> {
+  return apiFetch(`/api/inquiries/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+    token,
+  });
+}
+
 // ── ADMIN ─────────────────────────────────────────────
+export interface AdminUser {
+  id:           string;
+  name:         string;
+  email:        string;
+  role:         string;
+  tier:         number;
+  paket:        string;
+  is_banned:    boolean;
+  is_verified:  boolean;
+  created_at:   string;
+  _count?:      { listings: number };
+}
+
 export async function getAdminStats(token: string) {
   return apiFetch<{
     total_users:     number;
@@ -227,6 +270,36 @@ export async function getAdminStats(token: string) {
     new_leads:       number;
     monthly_revenue: number;
   }>('/api/admin/stats', { token });
+}
+
+export async function getAdminUsers(token: string, limit = 100) {
+  return apiFetch<{ users: AdminUser[]; total: number }>(
+    `/api/users?limit=${limit}`,
+    { token }
+  );
+}
+
+export async function toggleUserBan(
+  userId: string,
+  action: 'ban' | 'unban',
+  token: string,
+): Promise<{ updated: boolean }> {
+  return apiFetch(`/api/admin/users/${userId}/${action}`, {
+    method: 'PATCH',
+    token,
+  });
+}
+
+export async function upgradeUserTier(
+  userId: string,
+  tier: number,
+  token: string,
+): Promise<{ updated: boolean }> {
+  return apiFetch(`/api/admin/users/${userId}/tier`, {
+    method: 'PATCH',
+    body: JSON.stringify({ tier }),
+    token,
+  });
 }
 
 export async function getAdminLeads(token: string, page = 1) {

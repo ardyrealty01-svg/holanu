@@ -10,7 +10,7 @@ import {
   MoreVertical, CheckCircle, Clock, AlertCircle, Loader2,
   Map, Filter, BarChart2, TrendingUp,
 } from 'lucide-react';
-import { getListings, listingToProperty, createListing } from '@/lib/api';
+import { getListings, deleteListing, updateListing, createListing, listingToProperty } from '@/lib/api';
 
 type Status = 'semua' | 'aktif' | 'pending' | 'negosiasi' | 'terjual' | 'draft';
 
@@ -59,6 +59,7 @@ const CSV_COLUMNS = [
   { key: 'sell_reason',    label: 'Alasan Jual/Sewa',                  example: 'Pindah tugas',                             required: false },
   { key: 'facilities',     label: 'Fasilitas (pisahkan dengan |)',      example: 'Garasi|Taman|Keamanan 24 Jam',             required: false },
   { key: 'video_url',      label: 'Link Video YouTube/TikTok',         example: 'https://youtube.com/watch?v=xxx',          required: false },
+  { key: 'images_webp',   label: 'Link Foto WebP (pisahkan dengan |)', example: 'https://ik.imagekit.io/xxx/foto1.webp|https://ik.imagekit.io/xxx/foto2.webp', required: false },
 ];
 
 // Valid values untuk validasi
@@ -88,6 +89,8 @@ function PropertiPage() {
   const [loading,      setLoading]      = useState(true);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [uploading,    setUploading]    = useState(false);
+  const [deletingId,   setDeletingId]   = useState<string | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
 
   // ── Download template CSV ──
   const downloadTemplate = () => {
@@ -102,6 +105,9 @@ function PropertiPage() {
       '# Kolom bertanda * wajib diisi',
       '# Harga dalam Rupiah tanpa titik/koma (contoh: 850000000)',
       '# facilities: pisahkan dengan tanda | (pipe)',
+      '# images_webp: URL foto WebP dari ImageKit, pisahkan dengan | (pipe)',
+      '#   Contoh: https://ik.imagekit.io/ID/tr:f-webp/foto1.jpg|https://ik.imagekit.io/ID/tr:f-webp/foto2.jpg',
+      '#   Upload foto dulu via dashboard Tambah Properti, lalu salin URL WebP yang dihasilkan',
     ].join('\n');
 
     const csv     = `${notes}\n${headers}\n${example}\n`;
@@ -187,9 +193,12 @@ function PropertiPage() {
           building_area:  row.building_area ? +row.building_area : null,
           certificate:    row.certificate || null,
           condition:      row.condition   || 'Baru',
-          facilities:     row.facilities  ? row.facilities.split('|').map(f => f.trim()).filter(Boolean) : [],
+          facilities:     row.facilities  ? row.facilities.split('|').map((f: string) => f.trim()).filter(Boolean) : [],
           video_url:      row.video_url   || null,
-          images:         [],
+          // Baca URL foto WebP dari kolom images_webp (pisah dengan |)
+          images:         row.images_webp
+            ? row.images_webp.split('|').map((u: string) => u.trim()).filter(Boolean)
+            : [],
         }, token);
         results.success++;
       } catch (err: any) {
@@ -213,15 +222,17 @@ function PropertiPage() {
   // ── Hapus listing ──
   const handleDeleteListing = async (listingId: string) => {
     if (!confirm('Hapus listing ini permanen? Tindakan tidak bisa dibatalkan.')) return;
+    setDeletingId(listingId);
     try {
       const token = await getToken();
       if (!token) { alert('Sesi login tidak valid'); return; }
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings/${listingId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await deleteListing(listingId, token);
       setAllListings(prev => prev.filter((l: any) => l.id !== listingId));
-    } catch { alert('Gagal hapus listing. Coba lagi.'); }
+    } catch {
+      alert('Gagal hapus listing. Coba lagi.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   useEffect(() => {
@@ -471,11 +482,14 @@ function PropertiPage() {
                         <Edit size={14} />
                       </button>
                       <button
+                        disabled={deletingId === listing.id}
                         onClick={() => handleDeleteListing(listing.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Hapus listing"
                       >
-                        <Trash2 size={14} />
+                        {deletingId === listing.id
+                          ? <Loader2 size={14} className="animate-spin" />
+                          : <Trash2 size={14} />}
                       </button>
                       <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors" title="Opsi lain">
                         <MoreVertical size={14} />
@@ -502,19 +516,25 @@ function PropertiPage() {
                     )}
                     {listing.status === 'draft' && (
                       <button
+                        disabled={publishingId === listing.id}
                         onClick={async () => {
-                          const token = await getToken();
-                          if (!token) return;
-                          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings/${listing.id}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                            body: JSON.stringify({ status: 'aktif' }),
-                          });
-                          setAllListings(prev => prev.map((l: any) => l.id === listing.id ? { ...l, status: 'aktif' } : l));
+                          setPublishingId(listing.id);
+                          try {
+                            const token = await getToken();
+                            if (!token) return;
+                            await updateListing(listing.id, { status: 'aktif' }, token);
+                            setAllListings(prev => prev.map((l: any) => l.id === listing.id ? { ...l, status: 'aktif' } : l));
+                          } catch {
+                            alert('Gagal publish listing. Coba lagi.');
+                          } finally {
+                            setPublishingId(null);
+                          }
                         }}
-                        className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold font-sans border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-50 transition-colors ml-auto"
+                        className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold font-sans border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-50 transition-colors ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <CheckCircle size={10} /> Publish
+                        {publishingId === listing.id
+                          ? <Loader2 size={10} className="animate-spin" />
+                          : <CheckCircle size={10} />} Publish
                       </button>
                     )}
                     {listing.status === 'pending' && (

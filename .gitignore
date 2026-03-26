@@ -19,3 +19,6 @@ node_modules/
 .env
 .env.local
 .env.production
+
+# clerk configuration (can include secrets)
+/.clerk/

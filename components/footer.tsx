@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Instagram, Youtube, Twitter, Facebook } from 'lucide-react';
+import { HOLANU_WA_NUMBER } from '@/lib/contact';
 
 const COLS = [
   {
@@ -62,18 +63,21 @@ export function Footer() {
             {/* Social */}
             <div className="flex gap-2">
               {[
-                { icon: Instagram, label: 'Instagram' },
-                { icon: Facebook,  label: 'Facebook'  },
-                { icon: Twitter,   label: 'Twitter'   },
-                { icon: Youtube,   label: 'YouTube'   },
-              ].map(({ icon: Icon, label }) => (
-                <button
+                { icon: Instagram, label: 'Instagram', href: 'https://instagram.com/holanu.id' },
+                { icon: Facebook,  label: 'Facebook',  href: 'https://facebook.com/holanu.id'  },
+                { icon: Twitter,   label: 'Twitter',   href: 'https://twitter.com/holanu_id'   },
+                { icon: Youtube,   label: 'YouTube',   href: 'https://youtube.com/@holanu'     },
+              ].map(({ icon: Icon, label, href }) => (
+                <a
                   key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-xl border border-[#1E40AF] text-[#94A3B8] hover:border-[#1D4ED8] hover:text-[#BAE6FD] flex items-center justify-center transition-all"
                 >
                   <Icon size={15} />
-                </button>
+                </a>
               ))}
             </div>
           </div>

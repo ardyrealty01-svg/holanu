@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { getAdminUsers, toggleUserBan, upgradeUserTier } from '@/lib/api';
 import {
-  Search, Filter, Download, Eye, Edit,
+  Search, Filter, Download, Eye, Edit, User,
   Ban, ChevronUp, ShieldCheck, MoreVertical,
-  Phone, MapPin, Home, Wallet, Clock,
+  Phone, MapPin, Clock,
   MessageCircle, CheckCircle2, AlertCircle, Loader2,
-  User,
 } from 'lucide-react';
 
 /* ─── DATA TYPES ─── */
@@ -123,7 +123,38 @@ export default function AdminUsersPage() {
   const [search, setSearch]   = useState('');
   const [selectedLead, setSelectedLead] = useState<typeof buyerLeads[0] | null>(null);
   const [allUsers, setAllUsers]         = useState(users);
+  const [loadingData, setLoadingData]   = useState(true);
   const [actioningId, setActioningId]   = useState<string | null>(null);
+
+  // Load users dari real API saat mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await getAdminUsers(token, 100);
+        if (res.users?.length > 0) {
+          setAllUsers(res.users.map((u: any) => ({
+            id:          u.id,
+            name:        u.name || 'Nama Pengguna',
+            email:       u.email,
+            role:        u.role || 'Calon Pembeli',
+            displayRole: u.role === 'Pemilik Properti' ? 'Agent' : (u.role || 'Calon Pembeli'),
+            tier:        u.tier || 1,
+            listing:     u._count?.listings ?? 0,
+            status:      u.is_banned ? 'banned' : 'aktif',
+            paket:       u.paket || '-',
+            joined:      u.created_at ? new Date(u.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-',
+          })));
+        }
+      } catch {
+        // Fallback ke data statis
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    load();
+  }, []);
 
   const handleBanToggle = async (userId: string, currentlyBanned: boolean) => {
     setActioningId(userId);
@@ -131,10 +162,7 @@ export default function AdminUsersPage() {
       const token = await getToken();
       if (!token) return;
       const action = currentlyBanned ? 'unban' : 'ban';
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/${action}`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await toggleUserBan(userId, action, token);
       setAllUsers(prev => prev.map(u =>
         u.id === userId ? { ...u, status: currentlyBanned ? 'aktif' : 'banned' } : u
       ));
@@ -161,7 +189,7 @@ export default function AdminUsersPage() {
         <div>
           <h1 className="font-heading font-bold text-2xl text-[#1E3A8A]">Manajemen Users & Leads</h1>
           <p className="text-sm text-slate-500 font-sans mt-0.5">
-            Total {users.length} user · {newLeadsCount} lead baru hari ini
+            Total {allUsers.length} user · {newLeadsCount} lead baru hari ini
           </p>
         </div>
         <button className="flex items-center gap-2 border border-[#BFDBFE] bg-white text-sm text-slate-600 px-4 py-2 rounded-xl font-sans hover:border-[#1D4ED8] transition-colors">
@@ -203,6 +231,12 @@ export default function AdminUsersPage() {
       {/* ═══ TAB: SEMUA USER ═══ */}
       {mainTab === 'semua' && (
         <div className="bg-white rounded-xl border border-[#BFDBFE] shadow-sm overflow-hidden">
+          {loadingData && (
+            <div className="flex items-center gap-2 px-5 py-3 bg-[#EFF6FF] border-b border-[#BFDBFE]">
+              <Loader2 size={14} className="animate-spin text-[#1D4ED8]" />
+              <span className="text-xs text-[#1D4ED8] font-sans">Memuat data user dari database...</span>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[#EFF6FF]">
@@ -266,11 +300,7 @@ export default function AdminUsersPage() {
                             try {
                               const token = await getToken();
                               if (!token) return;
-                              await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${user.id}/tier`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                                body: JSON.stringify({ tier: newTier }),
-                              });
+                              await upgradeUserTier(user.id, newTier, token);
                               setAllUsers(prev => prev.map(u => u.id === user.id ? { ...u, tier: newTier } : u));
                             } catch { alert('Gagal upgrade tier.'); }
                             finally { setActioningId(null); }
@@ -304,7 +334,7 @@ export default function AdminUsersPage() {
             </table>
           </div>
           <div className="px-5 py-3 border-t border-[#F1F5F9] flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-sans">Menampilkan {filteredUsers.length} dari {users.length} users</span>
+            <span className="text-xs text-slate-400 font-sans">Menampilkan {filteredUsers.length} dari {allUsers.length} users</span>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   Search, Filter, CheckCircle, XCircle, Flag, Eye,
@@ -28,9 +28,42 @@ export default function AdminListingPage() {
   const [autoApprove, setAutoApprove] = useState(true);
   const [activeTab,   setActiveTab]   = useState('semua');
   const [listings,    setListings]    = useState(INITIAL_LISTINGS);
+  const [loadingData, setLoadingData] = useState(true);
   const [actioningId, setActioningId] = useState<string | null>(null);
 
   const tabs = ['semua', 'pending', 'reported', 'expired', 'featured'];
+
+  // Load listing data dari real API saat mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res  = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || ''}/api/admin/listings?limit=50`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const json = await res.json() as { ok: boolean; data: { listings: any[] } };
+        if (json.ok && json.data?.listings?.length > 0) {
+          setListings(json.data.listings.map((l: any) => ({
+            id:       l.id,
+            code:     l.code ?? l.id,
+            title:    l.title,
+            agent:    l.agent_name ?? '—',
+            status:   l.status ?? 'aktif',
+            flag:     (l.reports ?? 0) > 0 ? 'warn' : 'clean',
+            views:    l.views ?? 0,
+            reported: l.reports ?? 0,
+          })));
+        }
+      } catch {
+        // Fallback ke data statis jika API tidak tersedia
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    load();
+  }, []);
 
   const callAdminAPI = async (listingId: string, action: 'approve' | 'reject') => {
     setActioningId(listingId);
@@ -131,6 +164,12 @@ export default function AdminListingPage() {
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-[#BFDBFE] shadow-sm overflow-hidden">
+        {loadingData && (
+          <div className="flex items-center gap-2 px-5 py-3 bg-[#EFF6FF] border-b border-[#BFDBFE]">
+            <Loader2 size={14} className="animate-spin text-[#1D4ED8]" />
+            <span className="text-xs text-[#1D4ED8] font-sans">Memuat data listing dari database...</span>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[#EFF6FF]">

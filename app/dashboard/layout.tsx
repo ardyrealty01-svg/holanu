@@ -46,7 +46,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#1D4ED8]" />
             </button>
             <UserButton
-              afterSignOutUrl="/"
               appearance={{
                 elements: { avatarBox: 'w-8 h-8 rounded-full' },
               }}

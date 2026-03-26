@@ -79,24 +79,29 @@ export default function KonsultasiPage() {
     setSubmitError('');
     if (!nama.trim()) { setSubmitError('Nama wajib diisi'); setSubmitting(false); return; }
     if (!wa.trim())   { setSubmitError('WhatsApp wajib diisi'); setSubmitting(false); return; }
-     try {
-        await submitLead({
-          name:            nama.trim(),
-          whatsapp:        wa.replace(/\D/g, '').startsWith('0') ? `62${wa.replace(/\D/g,'').slice(1)}` : wa.replace(/\D/g,''),
-          domisili_kota:   domKota  || undefined,
-          domisili_prov:   domProv  || undefined,
-          pekerjaan:       pekerjaan || undefined,
-          property_type:   propType  || undefined,
-          purpose:         tujuan    || undefined,
-          lokasi_incaran:  lokasiArea || undefined,
-          budget_min:      budgetMin ? parseRp(budgetMin) : undefined,
-          budget_max:      budgetMax ? parseRp(budgetMax) : undefined,
-          payment_method:  payment   || undefined,
-          timeline:        timeline  || undefined,
-          facilities:      fac,
-          notes:           catatan   || undefined,
-          source:          'form',
-        });
+    try {
+      await submitLead({
+        name:            nama.trim(),
+        whatsapp:        wa.replace(/\D/g, '').startsWith('0') ? `62${wa.replace(/\D/g,'').slice(1)}` : wa.replace(/\D/g,''),
+        domisili_kota:   domKota  || undefined,
+        domisili_prov:   domProv  || undefined,
+        pekerjaan:       pekerjaan || undefined,
+        property_type:   propType  || undefined,
+        purpose:         tujuan    || undefined,
+        lokasi_incaran:  lokasiArea || undefined,
+        lokasi_prov:     lokasiProv || undefined,
+        min_bedrooms:    minKT ? parseInt(minKT) : undefined,
+        min_land_area:   minLT ? parseInt(minLT) : undefined,
+        budget_min:      budgetMin ? parseRp(budgetMin) : undefined,
+        budget_max:      budgetMax ? parseRp(budgetMax) : undefined,
+        payment_method:  payment   || undefined,
+        timeline:        timeline  || undefined,
+        certificate:     cert      || undefined,
+        condition:       kondisi   || undefined,
+        facilities:      fac,
+        notes:           catatan   || undefined,
+        source:          'form',
+      });
       setDone(true);
     } catch (err: any) {
       setSubmitError('Gagal mengirim. Coba lagi dalam beberapa saat.');

@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-// Workers URL — selalu gunakan URL absolut untuk proxy destination
-const WORKERS_URL = 'https://holanu-api.holanu-api.workers.dev';
-
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -27,23 +24,26 @@ const nextConfig = {
   /**
    * API Proxy Rewrites — mengatasi CORS di local development
    *
-   * LOCAL DEV (.env.local: NEXT_PUBLIC_API_URL=""):
-   *   Browser  → GET /api/upload (same-origin, no CORS)
-   *   Next.js  → proxy → https://holanu-api.workers.dev/api/upload
-   *   Workers  → return ImageKit signature
+   * LOCAL DEV (.env.local: NEXT_PUBLIC_API_URL="..."):
+   *   Jika ada komponen yang fetch() ke /api/path, Next.js akan mem-proxy
+   *   request tersebut ke NEXT_PUBLIC_API_URL.
    *
-   * PRODUCTION (Vercel env: NEXT_PUBLIC_API_URL="https://holanu-api.workers.dev"):
-   *   Browser langsung hit Workers URL — proxy tidak dipakai
-   *   (isLocal = false → return [])
+   * PRODUCTION (Vercel):
+   *   Proxy tidak aktif. Client fetch langsung ke NEXT_PUBLIC_API_URL.
    */
   async rewrites() {
     const isLocal = !process.env.VERCEL && !process.env.CF_PAGES;
-    if (!isLocal) return [];
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    // Proxy hanya aktif di local dev dan jika env var-nya ada.
+    if (!isLocal || !apiUrl) {
+      return [];
+    }
 
     return [
       {
         source:      '/api/:path*',
-        destination: `${WORKERS_URL}/api/:path*`,
+        destination: `${apiUrl}/api/:path*`,
       },
     ];
   },

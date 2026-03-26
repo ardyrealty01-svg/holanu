@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 import {
   TrendingUp, Eye, MessageSquare, MousePointerClick,
   Clock, MapPin, Loader2, ChevronDown,
@@ -41,19 +42,22 @@ const heatColor = (v: number) => {
 };
 
 export default function AnalitikPage() {
+  const { user, isLoaded }       = useUser();
   const [listings,   setListings]  = useState<any[]>([]);
   const [loading,    setLoading]   = useState(true);
   const [dateRange,  setDateRange] = useState<7 | 30 | 90>(30);
 
   useEffect(() => {
-    getListings({ limit: 10 })
+    if (!isLoaded) return;
+    // Filter berdasarkan user_id agar hanya tampil listing milik agen ini
+    getListings({ user_id: user?.id, limit: 50 })
       .then(res => {
         if (res.listings.length > 0) setListings(res.listings.map(listingToProperty));
         else setListings(topListings.map(l => ({ ...l, id: l.code, title: l.title, views: l.views, inquiry_count: l.inquiry })));
       })
       .catch(() => setListings(topListings.map(l => ({ ...l, id: l.code, title: l.title, views: l.views, inquiry_count: l.inquiry }))))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isLoaded, user?.id]);
 
   const totalViews    = listings.reduce((s, l) => s + (l.views ?? 0), 0);
   const totalInquiry  = listings.reduce((s, l) => s + (l.inquiry_count ?? 0), 0);
