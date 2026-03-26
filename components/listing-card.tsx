@@ -108,9 +108,9 @@ export function ListingCard({ property, initialFavorited = false }: ListingCardP
     ? Math.round(property.price / property.area)
     : null;
 
-  return (
-    <Link href={`/property/${property.id}`}>
-      <div className="group relative rounded-xl overflow-hidden border border-[#BFDBFE] bg-white shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+   return (
+      <Link href={`/property/${property.id}`}>
+         <div className="group relative rounded-xl overflow-hidden border border-[#BFDBFE] bg-white shadow-sm hover:-translate-y-4 hover:shadow-[0_20px_40px_rgba(29,78,216,0.12)] transition-all duration-300">
 
         {/* ═══ IMAGE CAROUSEL ═══ */}
         <div className="relative overflow-hidden bg-[#1E3A8A]" style={{ paddingBottom: '56.25%' }}>
@@ -122,13 +122,13 @@ export function ListingCard({ property, initialFavorited = false }: ListingCardP
           >
             {images.map((img, idx) => (
               <div key={idx} className="w-full flex-shrink-0 h-full relative">
-                <Image
-                  src={img || '/images/listing-1.jpg'}
-                  alt={`${property.title} foto ${idx + 1}`}
-                  fill
-                  className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/listing-1.jpg'; }}
-                />
+                 <Image
+                   src={img || '/images/listing-1.jpg'}
+                   alt={`${property.title} foto ${idx + 1}`}
+                   fill
+                   className="object-cover group-hover:scale-[1.05] transition-transform duration-500"
+                   onError={(e) => { (e.target as HTMLImageElement).src = '/images/listing-1.jpg'; }}
+                 />
               </div>
             ))}
           </div>
@@ -252,9 +252,9 @@ export function ListingCard({ property, initialFavorited = false }: ListingCardP
               {/* Strike-through price (HOT) */}
               {hot && property.originalPrice && (
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-[10px] text-slate-400 line-through">
-                    {formatCompact(property.originalPrice)}
-                  </span>
+                   <span className="text-[10px] text-slate-400 line-through font-display">
+                     {formatCompact(property.originalPrice)}
+                   </span>
                   {savings >= 5 && (
                     <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-sm">
                       Hemat {savings}%
@@ -263,13 +263,13 @@ export function ListingCard({ property, initialFavorited = false }: ListingCardP
                 </div>
               )}
 
-              {/* Current price */}
-              <p className="font-heading font-bold text-xl text-[#1D4ED8] leading-tight">
-                {formatCompact(property.price)}
-                {property.offerType === 'Disewa' && (
-                  <span className="text-[11px] text-slate-400 font-normal ml-1">/bln</span>
-                )}
-              </p>
+               {/* Current price */}
+               <p className="font-display font-bold text-xl text-[#1D4ED8] leading-tight">
+                 {formatCompact(property.price)}
+                 {property.offerType === 'Disewa' && (
+                   <span className="text-[11px] text-slate-400 font-normal ml-1">/bln</span>
+                 )}
+               </p>
             </div>
 
             {/* Certificate badge */}
