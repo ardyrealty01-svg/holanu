@@ -43,16 +43,19 @@ export default clerkMiddleware(async (auth, req) => {
   // 2. Cek role admin via clerkClient (cara yang benar di Clerk v6)
   if (isAdminRoute(req) && userId) {
     try {
-      // Cek cache dulu
-      let role = getCachedRole(userId);
-      if (role === null) {
-        // Cache miss — fetch dari Clerk
-        const client = await clerkClient();
-        const user   = await client.users.getUser(userId);
-        const fetchedRole: string = (user.publicMetadata as any)?.role ?? '';
-        setCachedRole(userId, fetchedRole);
-        role = fetchedRole;
-      }
+       // Cek cache dulu
+       let role = getCachedRole(userId);
+       if (role === null) {
+         // Cache miss — fetch dari Clerk
+         const client = await clerkClient();
+         const user   = await client.users.getUser(userId);
+         // Try publicMetadata first, then privateMetadata (for roles set via Dashboard)
+         const publicRole = (user.publicMetadata as any)?.role ?? '';
+         const privateRole = (user.privateMetadata as any)?.role ?? '';
+         const fetchedRole: string = publicRole || privateRole;
+         setCachedRole(userId, fetchedRole);
+         role = fetchedRole;
+       }
 
       if (role !== 'admin') {
         return NextResponse.redirect(new URL('/dashboard', req.url));
