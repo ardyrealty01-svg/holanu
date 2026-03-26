@@ -6,13 +6,14 @@ import { useUser } from '@clerk/nextjs';
 import {
   LayoutDashboard, Home, MessageSquare, FileText,
   CreditCard, BarChart2, Settings, LogOut, ShieldCheck,
-  HelpCircle, ChevronRight, X,
+  HelpCircle, ChevronRight, X, Heart,
 } from 'lucide-react';
 
 const NAV = [
   { href: '/dashboard',            icon: LayoutDashboard, label: 'Overview' },
   { href: '/dashboard/properti',   icon: Home,            label: 'Properti Saya' },
   { href: '/dashboard/inquiry',    icon: MessageSquare,   label: 'Inquiry & CRM' },
+  { href: '/dashboard/tersimpan',  icon: Heart,           label: 'Tersimpan' },
   { href: '/dashboard/form',       icon: FileText,        label: 'Form & Kontrak', badge: 'Pro' },
   { href: '/dashboard/langganan',  icon: CreditCard,      label: 'Langganan & Billing' },
   { href: '/dashboard/analitik',   icon: BarChart2,       label: 'Analitik' },

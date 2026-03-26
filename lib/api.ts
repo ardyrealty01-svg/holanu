@@ -197,6 +197,27 @@ export async function submitLead(data: Lead): Promise<{ id: string }> {
   return apiFetch('/api/leads', { method: 'POST', body: JSON.stringify(data) });
 }
 
+// ── FAVORITES ─────────────────────────────────────────
+export async function getFavorites(token: string) {
+  return apiFetch<{ favorites: Listing[]; total: number }>('/api/favorites', { token });
+}
+
+export async function addFavorite(listingId: string, token: string): Promise<{ id: string }> {
+  return apiFetch('/api/favorites', {
+    method: 'POST',
+    body: JSON.stringify({ listing_id: listingId }),
+    token,
+  });
+}
+
+export async function removeFavorite(listingId: string, token: string): Promise<{ deleted: boolean }> {
+  return apiFetch(`/api/favorites/${listingId}`, { method: 'DELETE', token });
+}
+
+export async function checkFavorite(listingId: string, token: string): Promise<{ isFavorited: boolean }> {
+  return apiFetch(`/api/favorites/check?listing_id=${listingId}`, { token });
+}
+
 // ── INQUIRIES ─────────────────────────────────────────
 export type InquiryStage = 'baru' | 'dihubungi' | 'survey' | 'negosiasi' | 'deal' | 'gagal';
 

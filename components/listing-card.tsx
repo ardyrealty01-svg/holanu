@@ -2,15 +2,18 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Heart, ChevronLeft, ChevronRight, Camera,
   MapPin, BedDouble, Bath, Building2, Eye, ShieldCheck, Star,
 } from 'lucide-react';
+import { useUser, useAuth } from '@clerk/nextjs';
 import { Property, isHot, savingsPercent } from '@/lib/data';
+import { addFavorite, removeFavorite } from '@/lib/api';
 
 interface ListingCardProps {
   property: Property;
+  initialFavorited?: boolean;
 }
 
 // ─── Diamond SVG icon for FEATURED badge ───
@@ -37,9 +40,12 @@ const certStyle: Record<string, string> = {
   Girik:'bg-amber-50  text-amber-700  border border-amber-200',
 };
 
-export function ListingCard({ property }: ListingCardProps) {
+export function ListingCard({ property, initialFavorited = false }: ListingCardProps) {
+  const { isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorited, setIsFavorited]             = useState(false);
+  const [isFavorited, setIsFavorited] = useState(initialFavorited);
+  const [saving, setSaving] = useState(false);
 
   // Support multiple images when available; fall back to single image
   const images: string[] = (property as any).images?.length
@@ -76,9 +82,25 @@ export function ListingCard({ property }: ListingCardProps) {
     e.preventDefault(); e.stopPropagation();
     setCurrentImageIndex(i => (i < images.length - 1 ? i + 1 : 0));
   };
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    setIsFavorited(f => !f);
+    if (!isSignedIn || saving) return;
+    setSaving(true);
+    try {
+      const token = await getToken();
+      if (!token) return;
+      if (isFavorited) {
+        await removeFavorite(property.id, token);
+        setIsFavorited(false);
+      } else {
+        await addFavorite(property.id, token);
+        setIsFavorited(true);
+      }
+    } catch {
+      // Revert on error
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Price per m²
@@ -155,12 +177,13 @@ export function ListingCard({ property }: ListingCardProps) {
           <div className="absolute top-2 right-2 z-20">
             <button
               onClick={handleFavorite}
-              className="w-8 h-8 rounded-full bg-[rgba(13,27,42,0.65)] hover:bg-[rgba(13,27,42,0.88)] backdrop-blur-sm flex items-center justify-center transition-all duration-200"
-              aria-label="Simpan ke favorit"
+              disabled={saving}
+              className="w-8 h-8 rounded-full bg-[rgba(13,27,42,0.65)] hover:bg-[rgba(13,27,42,0.88)] backdrop-blur-sm flex items-center justify-center transition-all duration-200 disabled:opacity-50"
+              aria-label={isFavorited ? 'Hapus dari favorit' : 'Simpan ke favorit'}
             >
               <Heart
                 size={14}
-                className={isFavorited ? 'fill-red-500 text-red-500' : 'text-white'}
+                className={`transition-colors duration-200 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-white'}`}
               />
             </button>
           </div>
